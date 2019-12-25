@@ -21,6 +21,9 @@ def read_data(data_file_path, data_year_range = None):
     # Reverse the data set as it is loaded in date descending order, we want ascending
     df = df.iloc[::-1]
     
+    indicators.generate_hlc(df)
+    indicators.price_field = "HLCAverage"
+
     indicators.generate_ema(df, 30)
     indicators.generate_macd(df)
     indicators.generate_rsi(df)

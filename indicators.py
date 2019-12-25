@@ -1,20 +1,11 @@
 import numpy as np
 import pandas as pd
 
-time_multiplier = 1 # Default = 1 day
 price_field = "Close"
+time_multiplier = 1 # Default = 1 day
 
-def use_hourly_mode():
-    set_time_multiplier(24)
-
-def use_day_mode():
-    set_time_multiplier(1)
-
-def set_time_multiplier(multiplier):
-    time_multiplier = multiplier
-
-def set_price_field(field):
-    price_field = field
+def generate_hlc(df):
+    df["HLCAverage"] = (df["High"] + df["Low"] + df["Close"]) / 3
 
 def generate_ema(df, period):
     # period in days
