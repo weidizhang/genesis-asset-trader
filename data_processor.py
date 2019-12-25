@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-def read_data(data_file_path, data_year = None):
+def read_data(data_file_path, data_year_range = None):
     # Data frame
     df = pd.read_csv(
         data_file_path,
@@ -12,17 +12,21 @@ def read_data(data_file_path, data_year = None):
     df.drop("Volume USD", axis = 1, inplace = True)
     df.rename(columns = { "Volume BTC": "Volume" }, inplace = True) # Rename the asset volume column to just Volume
 
-    if data_year:
-        start_time = pd.datetime(year = data_year, month = 1, day = 1)
-        end_time = pd.datetime(year = data_year, month = 12, day = 31)
+    if data_year_range:
+        start_time = pd.datetime(year = min(data_year_range), month = 1, day = 1)
+        end_time = pd.datetime(year = max(data_year_range), month = 12, day = 31)
         df = df[(df.Date >= start_time) & (df.Date <= end_time)]
 
     # Reverse the data set as it is loaded in date descending order, we want ascending
     df = df.iloc[::-1]
-    df.reset_index(drop = True, inplace = True)
     
     generate_ema(df, 30)
     generate_macd(df)
+    generate_rsi(df)
+
+    # Remove first 30 entries to improve accuracy of calcuated technical indicators in training data
+    df = df[30:]
+    df.reset_index(drop = True, inplace = True)
 
     return df
 
@@ -31,7 +35,7 @@ def generate_ema(df, period):
     df["EMA" + str(period)] = pd.Series.ewm(df["Close"], span = period, adjust = False).mean()
 
 def generate_macd(df):
-    # EMA 12 - EMA 26
+    # EMA 12 - EMA 26 of price data
     df["MACD"] = pd.Series.ewm(df["Close"], span = 12, adjust = False).mean() - pd.Series.ewm(df["Close"], span = 26, adjust = False).mean()
     
     # EMA 9 of the MACD
@@ -39,18 +43,28 @@ def generate_macd(df):
 
     df["CrossDifference"] = df["MACD"] - df["MACDSignal"]
     df["MACDCrossDirection"] = np.where(
-        np.sign(df.CrossDifference.shift(1)) != np.sign(df.CrossDifference),
-        np.sign(df.CrossDifference),
+        np.sign(df["CrossDifference"].shift(1).fillna(0)) != np.sign(df["CrossDifference"]),
+        np.sign(df["CrossDifference"]),
         np.nan
     )
 
     df.drop("CrossDifference", axis = 1, inplace = True)
 
+def generate_rsi(df, period = 14):
+    def calculate_rsi(df_values):
+        gain, loss = df_values.copy(), df_values.copy()
+        gain[df_values < 0] = 0
+        loss[df_values > 0] = 0
+        rs = pd.Series(gain).rolling(window = period).mean() / pd.Series(loss).rolling(window = period).mean().abs()
+        return 100 - 100 / (1 + rs)
+    
+    df["RSI" + str(period)] = pd.Series(df["Close"]).rolling(center = False, window = period).apply(calculate_rsi, raw = True)
+
 def main():
     data_file_path = "unprocessed_data/Coinbase_BTCUSD_d.csv"
-    training_data_year = 2019
+    training_data_year_range = (2018, 2019)
 
-    df = read_data(data_file_path, training_data_year)
+    df = read_data(data_file_path, training_data_year_range)
     print(df)
 
 if __name__ == "__main__":
