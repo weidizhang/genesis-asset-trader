@@ -41,5 +41,7 @@ def main():
     df = read_data(data_file_path, training_data_year_range)
     print(df)
 
+    return df
+
 if __name__ == "__main__":
     main()
