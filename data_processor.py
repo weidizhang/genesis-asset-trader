@@ -24,7 +24,7 @@ def read_data(data_file_path, data_year_range = None):
     generate_macd(df)
     generate_rsi(df)
 
-    # Remove first 30 entries to improve accuracy of calcuated technical indicators in training data
+    # Remove first 30 days of entries to improve accuracy of calcuated technical indicators in training data
     df = df[30:]
     df.reset_index(drop = True, inplace = True)
 
@@ -51,14 +51,15 @@ def generate_macd(df):
     df.drop("CrossDifference", axis = 1, inplace = True)
 
 def generate_rsi(df, period = 14):
-    def calculate_rsi(df_values):
-        gain, loss = df_values.copy(), df_values.copy()
-        gain[df_values < 0] = 0
-        loss[df_values > 0] = 0
-        rs = pd.Series(gain).rolling(window = period).mean() / pd.Series(loss).rolling(window = period).mean().abs()
+    def calculate_rsi(delta):
+        gain, loss = delta.copy(), abs(delta.copy())
+        gain[delta < 0] = 0
+        loss[delta > 0] = 0
+        rs = gain.rolling(period).mean() / loss.rolling(period).mean()
         return 100 - 100 / (1 + rs)
-    
-    df["RSI" + str(period)] = pd.Series(df["Close"]).rolling(center = False, window = period).apply(calculate_rsi, raw = True)
+
+    delta = df["Close"].diff()
+    df["RSI"] = calculate_rsi(delta)
 
 def main():
     data_file_path = "unprocessed_data/Coinbase_BTCUSD_d.csv"
