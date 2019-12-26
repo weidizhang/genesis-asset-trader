@@ -43,6 +43,7 @@ def read_data(data_file_path, data_year_range = None, data_condensed = False):
     if data_condensed:
         condense(df)
 
+    indicators.generate_ema_cross(df)
     indicators.generate_macd_cross(df)
 
     return df

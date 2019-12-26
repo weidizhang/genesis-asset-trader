@@ -30,12 +30,23 @@ def condense_data_hundred(df_field, reference = None):
     # Transform data to range of [0, 100] based on the reference field
     df_field /= (reference - reference.min()).max() / 100
 
+def generate_cross(df, data_field, signal_field, name):
+    cross_diff = df[name + "CrossDifference"] = data_field - signal_field
+    df[name + "CrossDirection"] = np.where(
+        np.sign(cross_diff.shift().fillna(0)) != np.sign(cross_diff),
+        np.sign(cross_diff),
+        np.nan
+    )
+
 def generate_hlc(df):
     df["HLCAverage"] = (df["High"] + df["Low"] + df["Close"]) / 3
 
 def generate_ema(df, period):
     # period in days
     df["EMA" + str(period)] = pd.Series.ewm(df[price_field], span = period * time_multiplier, adjust = False).mean()
+
+def generate_ema_cross(df):
+    generate_cross(df, df["HLCAverage"], df["EMA30"], "EMA")
 
 def generate_macd(df):
     # EMA 12 - EMA 26 of price data
@@ -45,12 +56,7 @@ def generate_macd(df):
     df["MACDSignal"] = pd.Series.ewm(df["MACD"], span = 9 * time_multiplier, adjust = False).mean()
 
 def generate_macd_cross(df):
-    df["MACDCrossDifference"] = df["MACD"] - df["MACDSignal"]
-    df["MACDCrossDirection"] = np.where(
-        np.sign(df["MACDCrossDifference"].shift().fillna(0)) != np.sign(df["MACDCrossDifference"]),
-        np.sign(df["MACDCrossDifference"]),
-        np.nan
-    )
+    generate_cross(df, df["MACD"], df["MACDSignal"], "MACD")
 
 def generate_obv(df):
     for i in range(len(df)):
