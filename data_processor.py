@@ -26,7 +26,7 @@ def read_data(data_file_path, data_year_range = None, data_condensed = False):
     indicators.price_field = "HLCAverage"
 
     # Drop unused columns
-    unused = ["Open", "High", "Low", "Close", "Volume USD"]    
+    unused = ["Symbol", "Open", "High", "Low", "Close", "Volume USD"]    
     df.drop(unused, axis = 1, inplace = True)
 
     indicators.generate_ema(df, 30)
@@ -43,6 +43,7 @@ def read_data(data_file_path, data_year_range = None, data_condensed = False):
     if data_condensed:
         condense(df)
 
+    # Generate crossing data after data range is condensed
     indicators.generate_ema_cross(df)
     indicators.generate_macd_cross(df)
 
