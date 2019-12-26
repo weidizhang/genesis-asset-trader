@@ -7,9 +7,12 @@ time_multiplier = 1 # Default = 1 (day); use 24 if using hourly data
 # Constrain range of data to [-1, 1]
 # Done so that this data can be applied to other data sets
 # We only care about the resultant shape, not the raw numbers
-def condense_data(df_field):
-    midpt = (df_field.min() + df_field.max()) / 2
-    dist_directional = df_field.max() - midpt
+def condense_data(df_field, reference_df_field = None):
+    if reference_df_field is None:
+        reference_df_field = df_field
+
+    midpt = (reference_df_field.min() + reference_df_field.max()) / 2
+    dist_directional = reference_df_field.max() - midpt
 
     # Transform data to have a midpoint of 0
     df_field -= midpt
@@ -37,6 +40,7 @@ def generate_macd(df):
     # EMA 9 of the MACD
     df["MACDSignal"] = pd.Series.ewm(df["MACD"], span = 9 * time_multiplier, adjust = False).mean()
 
+def generate_macd_cross(df):
     df["MACDCrossDifference"] = df["MACD"] - df["MACDSignal"]
     df["MACDCrossDirection"] = np.where(
         np.sign(df["MACDCrossDifference"].shift().fillna(0)) != np.sign(df["MACDCrossDifference"]),

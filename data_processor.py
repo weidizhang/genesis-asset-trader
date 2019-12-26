@@ -43,6 +43,8 @@ def read_data(data_file_path, data_year_range = None, data_condensed = False):
     if data_condensed:
         condense(df)
 
+    indicators.generate_macd_cross(df)
+
     return df
 
 def condense(df):
@@ -55,9 +57,9 @@ def condense(df):
 
     # Range [-1, 1]
     # MACD related
+    # MACDSignal must come first; it is transformed based on original MACD range    
+    indicators.condense_data(df["MACDSignal"], df["MACD"])
     indicators.condense_data(df["MACD"])
-    indicators.condense_data(df["MACDSignal"])
-    indicators.condense_data(df["MACDCrossDifference"])
 
     # RSI is already in range of [0, 100]
 
