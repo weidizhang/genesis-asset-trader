@@ -7,8 +7,8 @@ register_matplotlib_converters()
 plt.rcParams["figure.figsize"] = (10, 6)
 
 df = data_processor.main()
-fig, axs = plt.subplots(3, gridspec_kw = { "height_ratios": [3, 1, 1] })
-ax0, ax1, ax2 = axs
+fig, axs = plt.subplots(4, gridspec_kw = { "height_ratios": [3, 1, 1, 1] })
+ax0, ax1, ax2, ax3 = axs
 x = df["Date"]
 
 # Price, EMA30
@@ -21,9 +21,13 @@ ax1.plot(x, df["MACD"])
 ax1.plot(x, df["MACDSignal"])
 ax1.legend(["MACD", "Signal"])
 
+# OBV
+ax2.plot(x, df["OBV"])
+ax2.legend(["OBV"])
+
 # RSI
-ax2.plot(x, df["RSI"])
-ax2.legend(["RSI"])
+ax3.plot(x, df["RSI"])
+ax3.legend(["RSI"])
 
 # Hide dates besides last subplot
 for i in range(len(axs) - 1):

@@ -1,8 +1,9 @@
+import math
 import numpy as np
 import pandas as pd
 
 price_field = "Close"
-time_multiplier = 1 # Default = 1 day
+time_multiplier = 1 # Default = 1 (day); use 24 if using hourly data
 
 def generate_hlc(df):
     df["HLCAverage"] = (df["High"] + df["Low"] + df["Close"]) / 3
@@ -20,10 +21,30 @@ def generate_macd(df):
 
     df["MACDCrossDifference"] = df["MACD"] - df["MACDSignal"]
     df["MACDCrossDirection"] = np.where(
-        np.sign(df["MACDCrossDifference"].shift(1).fillna(0)) != np.sign(df["MACDCrossDifference"]),
+        np.sign(df["MACDCrossDifference"].shift().fillna(0)) != np.sign(df["MACDCrossDifference"]),
         np.sign(df["MACDCrossDifference"]),
         np.nan
     )
+
+def generate_obv(df):
+    min_obv = math.inf
+
+    for i in range(len(df)):
+        volume = df.loc[i, "Volume"]
+
+        if i == 0:
+            df.loc[i, "OBV"] = volume
+        else:
+            prev_obv = df.loc[i - 1, "OBV"]
+            prev_close = df.loc[i - 1, price_field]
+            close = df.loc[i, price_field]
+
+            df.loc[i, "OBV"] = prev_obv + (volume if close > prev_close else (-volume if close < prev_close else 0))
+
+        min_obv = min(df.loc[i, "OBV"], min_obv)
+
+    # Transform data to have zero as fixed point minimum
+    df["OBV"] -= min_obv
 
 def generate_rsi(df, period = 14):
     def calculate_rsi(delta):
