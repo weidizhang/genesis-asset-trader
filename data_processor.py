@@ -2,13 +2,13 @@ import pandas as pd
 
 import indicators
 
-def read_data(data_file_path, data_year_range = None, data_condensed = False):
+def read_data(data_file_path, data_year_range = None, data_condensed = False, data_hourly = False):
     # Data frame
     df = pd.read_csv(
         data_file_path,
         header = 1,
         parse_dates = ["Date"],
-        date_parser = lambda x : pd.datetime.strptime(x, "%Y-%m-%d")
+        date_parser = lambda x : pd.datetime.strptime(x, "%Y-%m-%d" + (" %I-%p" if data_hourly else ""))
     )
     df.rename(columns = { "Volume BTC": "Volume" }, inplace = True) # Rename the asset volume column to just Volume
 
@@ -24,6 +24,8 @@ def read_data(data_file_path, data_year_range = None, data_condensed = False):
     
     indicators.generate_hlc(df)
     indicators.price_field = "HLCAverage"
+    if data_hourly:
+        indicators.time_multiplier = 24
 
     # Drop unused columns
     unused = ["Symbol", "Open", "High", "Low", "Close", "Volume USD"]    
@@ -35,7 +37,7 @@ def read_data(data_file_path, data_year_range = None, data_condensed = False):
     indicators.generate_rsi(df)
 
     # Remove first 30 days of entries to improve accuracy of calcuated technical indicators in training data
-    df = df[30:]
+    df = df[30 * indicators.time_multiplier:]
     df.reset_index(drop = True, inplace = True)
 
     # Condense ranges of data after data set rows/entries are finalized
@@ -66,10 +68,10 @@ def condense(df):
     # RSI is already in range of [0, 100]
 
 def main():
-    data_file_path = "unprocessed_data/Coinbase_BTCUSD_d.csv"
-    training_data_year_range = (2018, 2019)
+    data_file_path = "unprocessed_data/Coinbase_BTCUSD_1h.csv"
+    training_data_year_range = (2019,)
 
-    df = read_data(data_file_path, training_data_year_range, True)
+    df = read_data(data_file_path, training_data_year_range, True, True)
     print(df)
 
     return df
