@@ -16,6 +16,13 @@ def condense_data(df_field):
     # Transform data to range of [-1, 1]
     df_field *= 1 / dist_directional
 
+# Constrain range of data to [0, 100]
+def condense_data_hundred(df_field):
+    # Transform data to have zero as fixed point minimum first
+    df_field -= df_field.min()
+    # Transform data to range of [0, 100]
+    df_field /= df_field.max() / 100
+
 def generate_hlc(df):
     df["HLCAverage"] = (df["High"] + df["Low"] + df["Close"]) / 3
 
@@ -49,9 +56,6 @@ def generate_obv(df):
             close = df.loc[i, price_field]
 
             df.loc[i, "OBV"] = prev_obv + (volume if close > prev_close else (-volume if close < prev_close else 0))
-
-    # Transform data to have zero as fixed point minimum
-    df["OBV"] -= df["OBV"].min()
 
 def generate_rsi(df, period = 14):
     def calculate_rsi(delta):

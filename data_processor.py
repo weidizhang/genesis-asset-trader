@@ -2,7 +2,7 @@ import pandas as pd
 
 import indicators
 
-def read_data(data_file_path, data_year_range = None):
+def read_data(data_file_path, data_year_range = None, data_condensed = False):
     # Data frame
     df = pd.read_csv(
         data_file_path,
@@ -39,15 +39,22 @@ def read_data(data_file_path, data_year_range = None):
     df.reset_index(drop = True, inplace = True)
 
     # Condense ranges of data after data set rows/entries are finalized
-    condense(df)
+    # If we do not condense, then all original indicator values will be represented instead
+    if data_condensed:
+        condense(df)
 
     return df
 
 def condense(df):
     # Range [0, 100]
-    df["OBV"] /= df["OBV"].max() / 100
+    # OBV
+    indicators.condense_data_hundred(df["OBV"])
+    # Price related
+    indicators.condense_data_hundred(df["HLCAverage"])
+    indicators.condense_data_hundred(df["EMA30"])
 
     # Range [-1, 1]
+    # MACD related
     indicators.condense_data(df["MACD"])
     indicators.condense_data(df["MACDSignal"])
     indicators.condense_data(df["MACDCrossDifference"])
@@ -58,7 +65,7 @@ def main():
     data_file_path = "unprocessed_data/Coinbase_BTCUSD_d.csv"
     training_data_year_range = (2018, 2019)
 
-    df = read_data(data_file_path, training_data_year_range)
+    df = read_data(data_file_path, training_data_year_range, True)
     print(df)
 
     return df
