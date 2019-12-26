@@ -7,12 +7,12 @@ time_multiplier = 1 # Default = 1 (day); use 24 if using hourly data
 # Constrain range of data to [-1, 1]
 # Done so that this data can be applied to other data sets
 # We only care about the resultant shape, not the raw numbers
-def condense_data(df_field, reference_df_field = None):
-    if reference_df_field is None:
-        reference_df_field = df_field
+def condense_data(df_field, reference = None):
+    if reference is None:
+        reference = df_field
 
-    midpt = (reference_df_field.min() + reference_df_field.max()) / 2
-    dist_directional = reference_df_field.max() - midpt
+    midpt = (reference.min() + reference.max()) / 2
+    dist_directional = reference.max() - midpt
 
     # Transform data to have a midpoint of 0
     df_field -= midpt
@@ -20,11 +20,15 @@ def condense_data(df_field, reference_df_field = None):
     df_field *= 1 / dist_directional
 
 # Constrain range of data to [0, 100]
-def condense_data_hundred(df_field):
+def condense_data_hundred(df_field, reference = None):
+    if reference is None:
+        # Copy it because the reference could change if df_field *is* reference
+        reference = df_field.copy()
+
     # Transform data to have zero as fixed point minimum first
-    df_field -= df_field.min()
-    # Transform data to range of [0, 100]
-    df_field /= df_field.max() / 100
+    df_field -= reference.min()
+    # Transform data to range of [0, 100] based on the reference field
+    df_field /= (reference - reference.min()).max() / 100
 
 def generate_hlc(df):
     df["HLCAverage"] = (df["High"] + df["Low"] + df["Close"]) / 3

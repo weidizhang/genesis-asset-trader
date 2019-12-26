@@ -52,8 +52,8 @@ def condense(df):
     # OBV
     indicators.condense_data_hundred(df["OBV"])
     # Price related
+    indicators.condense_data_hundred(df["EMA30"], df["HLCAverage"])
     indicators.condense_data_hundred(df["HLCAverage"])
-    indicators.condense_data_hundred(df["EMA30"])
 
     # Range [-1, 1]
     # MACD related
