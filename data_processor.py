@@ -10,7 +10,6 @@ def read_data(data_file_path, data_year_range = None):
         parse_dates = ["Date"],
         date_parser = lambda x : pd.datetime.strptime(x, "%Y-%m-%d")
     )
-    df.drop("Volume USD", axis = 1, inplace = True)
     df.rename(columns = { "Volume BTC": "Volume" }, inplace = True) # Rename the asset volume column to just Volume
 
     if data_year_range:
@@ -26,6 +25,10 @@ def read_data(data_file_path, data_year_range = None):
     indicators.generate_hlc(df)
     indicators.price_field = "HLCAverage"
 
+    # Drop unused columns
+    unused = ["Open", "High", "Low", "Close", "Volume USD"]    
+    df.drop(unused, axis = 1, inplace = True)
+
     indicators.generate_ema(df, 30)
     indicators.generate_macd(df)
     indicators.generate_obv(df)
@@ -35,7 +38,21 @@ def read_data(data_file_path, data_year_range = None):
     df = df[30:]
     df.reset_index(drop = True, inplace = True)
 
+    # Condense ranges of data after data set rows/entries are finalized
+    condense(df)
+
     return df
+
+def condense(df):
+    # Range [0, 100]
+    df["OBV"] /= df["OBV"].max() / 100
+
+    # Range [-1, 1]
+    indicators.condense_data(df["MACD"])
+    indicators.condense_data(df["MACDSignal"])
+    indicators.condense_data(df["MACDCrossDifference"])
+
+    # RSI is already in range of [0, 100]
 
 def main():
     data_file_path = "unprocessed_data/Coinbase_BTCUSD_d.csv"

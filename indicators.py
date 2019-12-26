@@ -1,9 +1,20 @@
-import math
 import numpy as np
 import pandas as pd
 
 price_field = "Close"
 time_multiplier = 1 # Default = 1 (day); use 24 if using hourly data
+
+# Constrain range of data to [-1, 1]
+# Done so that this data can be applied to other data sets
+# We only care about the resultant shape, not the raw numbers
+def condense_data(df_field):
+    midpt = (df_field.min() + df_field.max()) / 2
+    dist_directional = df_field.max() - midpt
+
+    # Transform data to have a midpoint of 0
+    df_field -= midpt
+    # Transform data to range of [-1, 1]
+    df_field *= 1 / dist_directional
 
 def generate_hlc(df):
     df["HLCAverage"] = (df["High"] + df["Low"] + df["Close"]) / 3
@@ -27,8 +38,6 @@ def generate_macd(df):
     )
 
 def generate_obv(df):
-    min_obv = math.inf
-
     for i in range(len(df)):
         volume = df.loc[i, "Volume"]
 
@@ -41,10 +50,8 @@ def generate_obv(df):
 
             df.loc[i, "OBV"] = prev_obv + (volume if close > prev_close else (-volume if close < prev_close else 0))
 
-        min_obv = min(df.loc[i, "OBV"], min_obv)
-
     # Transform data to have zero as fixed point minimum
-    df["OBV"] -= min_obv
+    df["OBV"] -= df["OBV"].min()
 
 def generate_rsi(df, period = 14):
     def calculate_rsi(delta):
