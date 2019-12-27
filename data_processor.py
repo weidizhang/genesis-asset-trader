@@ -1,8 +1,12 @@
+import numpy as np
 import pandas as pd
 
+import extrema
 import indicators
 
-def read_data(data_file_path, data_year_range = None, data_condensed = False, data_hourly = False):
+def read_data(data_file_path,
+        data_year_range = None, data_condensed = False, data_hourly = False,
+        extrema_n = 20):
     # Data frame
     df = pd.read_csv(
         data_file_path,
@@ -31,6 +35,7 @@ def read_data(data_file_path, data_year_range = None, data_condensed = False, da
     unused = ["Symbol", "Open", "High", "Low", "Close", "Volume USD"]    
     df.drop(unused, axis = 1, inplace = True)
 
+    # Generate indicators
     indicators.generate_ema(df, 30)
     indicators.generate_macd(df)
     indicators.generate_obv(df)
@@ -48,6 +53,14 @@ def read_data(data_file_path, data_year_range = None, data_condensed = False, da
     # Generate crossing data after data range is condensed
     indicators.generate_ema_cross(df)
     indicators.generate_macd_cross(df)
+
+    # Generate local price extremas
+    minima_indices = extrema.local_minima(df["HLCAverage"], extrema_n)
+    maxima_indices = extrema.local_maxima(df["HLCAverage"], extrema_n)
+
+    df["Extrema"] = np.nan
+    df.loc[minima_indices, "Extrema"] = -1
+    df.loc[maxima_indices, "Extrema"] = 1
 
     return df
 
@@ -70,8 +83,9 @@ def condense(df):
 def main():
     data_file_path = "unprocessed_data/Coinbase_BTCUSD_1h.csv"
     training_data_year_range = (2019,)
+    extrema_n = 20
 
-    df = read_data(data_file_path, training_data_year_range, True, True)
+    df = read_data(data_file_path, training_data_year_range, True, True, extrema_n)
     print(df)
 
     return df

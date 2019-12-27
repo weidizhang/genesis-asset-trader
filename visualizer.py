@@ -21,7 +21,15 @@ def visualize_data():
 
     ax0.plot(x, df["HLCAverage"])
     ax0.plot(x, df["EMA30"])
-    ax0.legend(["HLC Average", "EMA30"])
+
+    # Price: Extrema
+    minima = df.loc[df["Extrema"] == -1]
+    maxima = df.loc[df["Extrema"] == 1]
+
+    ax0.scatter(minima["Date"], minima["HLCAverage"], c = "g")
+    ax0.scatter(maxima["Date"], maxima["HLCAverage"], c = "r")
+
+    ax0.legend(["HLC Average", "EMA30", "Minima", "Maxima"])
 
     # MACD
     ax1.title.set_text("Moving Average Convergence Divergence")
