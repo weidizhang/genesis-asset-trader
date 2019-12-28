@@ -80,14 +80,15 @@ def condense(df):
 
     # RSI is already in range of [0, 100]
 
-def main():
-    data_file_path = "unprocessed_data/Coinbase_BTCUSD_1h.csv"
-    training_data_year_range = (2019,)
+def main(print_df = True):
+    data_file_path = "datasets/Coinbase_BTCUSD_1h.csv"
+    data_year_range = (2017, 2018)
     extrema_n = 20
 
-    df = read_data(data_file_path, training_data_year_range, True, True, extrema_n)
-    print(df)
+    df = read_data(data_file_path, data_year_range, True, True, extrema_n)
 
+    if print_df:
+        print(df)
     return df
 
 if __name__ == "__main__":
