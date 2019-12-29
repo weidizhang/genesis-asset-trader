@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 
 from predict import Predict
 
+import backtest_strategy as strategy
 import data_processor
 import train
-import strategy
 
 def configure():
     register_matplotlib_converters()
