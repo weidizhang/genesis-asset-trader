@@ -27,6 +27,7 @@ def visualize_decision_tree(dtree, features):
     graph.format = "png"
     graph.render("trained-tree", view = True)
 
+# TODO: move this or make shared split data function for both train and predict modules
 def split_data(df, 
             feature_columns = [
                 "HLCAverage", "RSI", "EMACrossDifference", "EMACrossDirection", "MACDCrossDifference", "MACDCrossDirection"

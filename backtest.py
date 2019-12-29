@@ -18,8 +18,15 @@ def predict_extremas(data_file_path,
     # Use the data processor to get the data frame for actual data
     df = data_processor.read_data(data_file_path, data_year_range, True, data_hourly, extrema_n)
 
-    predict = Predict("models/model.joblib")
+    # Use optional keyword for readability
+    predict = Predict(
+        "models/model.joblib",
+        k_neighbors = 5,
+        max_conflicts = 2,
+        search_distance = 26
+    )
     train.preprocess_data(df)
+
     removed_extremas = predict.predict_full(df, train.split_data(df)[0])
     print("Extremas removed from originally predicted model:", removed_extremas)
 

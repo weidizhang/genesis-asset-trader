@@ -1,7 +1,10 @@
 from joblib import load
 
 class Predict:
-    def __init__(self, model_file, k_neighbors = 4, max_conflicts = 0, search_distance = 24): # TODO: remove default values?
+    def __init__(self, model_file, k_neighbors = -1, max_conflicts = -1, search_distance = -1):
+        if k_neighbors < 0 or max_conflicts < 0 or search_distance < 0:
+            raise PredictException("Specify legal values for all of: k_neighbors, max_conflicts, search_distance")
+
         self.load_model(model_file)
         self.set_k_neighbors(k_neighbors)
         self.set_search_distance(search_distance)
@@ -78,3 +81,6 @@ class Predict:
         # TODO: is there a better way to do this?
         for i, row in predicted_extremas.iterrows():
             df.loc[i, "Extrema"] = row["Extrema"]
+
+class PredictException(Exception):
+    pass
