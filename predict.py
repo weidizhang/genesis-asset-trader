@@ -10,6 +10,10 @@ class Predict:
         self.set_search_distance(search_distance)
         self.set_max_conflicts(max_conflicts)
 
+    @staticmethod
+    def delete_extremas(df, indices):
+        df.loc[indices, "Extrema"] = 0
+
     def load_model(self, file):
         self._model = load(file)
 
@@ -33,7 +37,7 @@ class Predict:
             return 0
         
         bad_extremas = self.validate_extremas(df)
-        df.loc[bad_extremas, "Extrema"] = 0
+        Predict.delete_extremas(df, bad_extremas)
 
         return len(bad_extremas)
 

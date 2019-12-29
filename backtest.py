@@ -5,6 +5,7 @@ from predict import Predict
 
 import data_processor
 import train
+import strategy
 
 def configure():
     register_matplotlib_converters()
@@ -28,7 +29,12 @@ def predict_extremas(data_file_path,
     train.preprocess_data(df)
 
     removed_extremas = predict.predict_full(df, train.split_data(df)[0])
-    print("Extremas removed from originally predicted model:", removed_extremas)
+    print("Extremas removed from originally predicted model via heuristic:", removed_extremas)
+
+    removed_extremas = strategy.alternate_extremas(df, False)
+    print("Extremas removed from originally predicted model via strategy:", removed_extremas)
+
+    strategy.end_with_sell(df)
 
     return df
 
@@ -37,9 +43,9 @@ def visualize_data(df):
     ax0 = axs
     x = df["Date"]
 
-    fig.suptitle("backtest")
+    fig.suptitle("Overall Predictive Backtest")
 
-    # Price, EMA30
+    # Price
     ax0.title.set_text("Price")
 
     ax0.plot(x, df["HLCAverage"])
@@ -51,7 +57,7 @@ def visualize_data(df):
     ax0.scatter(minima["Date"], minima["HLCAverage"], c = "g")
     ax0.scatter(maxima["Date"], maxima["HLCAverage"], c = "r")
 
-    ax0.legend(["HLC Average", "Predicted Minima", "Predicted Maxima"])
+    ax0.legend(["HLC Average", "Model Buy", "Model Sell"])
 
     plt.show()
 
