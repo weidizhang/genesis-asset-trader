@@ -31,7 +31,7 @@ def predict_extremas(data_file_path,
     removed_extremas = predict.predict_full(df, train.split_data(df)[0])
     print("Extremas removed from originally predicted model via heuristic:", removed_extremas)
 
-    removed_extremas = strategy.alternate_extremas(df, False)
+    removed_extremas = strategy.alternate_extremas(df)
     print("Extremas removed from originally predicted model via strategy:", removed_extremas)
 
     strategy.end_with_sell(df)
@@ -39,8 +39,8 @@ def predict_extremas(data_file_path,
     return df
 
 def visualize_data(df):
-    fig, axs = plt.subplots(1, gridspec_kw = { "height_ratios": [3] })
-    ax0 = axs
+    fig, axs = plt.subplots(2, gridspec_kw = { "height_ratios": [3, 1] })
+    ax0, ax1 = axs
     x = df["Date"]
 
     fig.suptitle("Overall Predictive Backtest")
@@ -59,7 +59,28 @@ def visualize_data(df):
 
     ax0.legend(["HLC Average", "Model Buy", "Model Sell"])
 
+    visualize_tx_summary(df, ax1, ax0)
+
     plt.show()
+
+def visualize_tx_summary(df, ax, reference_ax):
+    df_summary = strategy.generate_tx_summary(df)
+    print(df_summary)
+
+    buy = df_summary.loc[df_summary["Extrema"] == -1]
+    sell = df_summary.loc[df_summary["Extrema"] == 1]
+
+    pl_text = str(round(df_summary[::-1].iloc[0]["ProfitLoss"], 2)) + "%"
+    ax.title.set_text("Profit/Loss: " + pl_text + " Over Time Span")
+
+    ax.scatter(buy["Date"], buy["ProfitLoss"], c = "g")
+    ax.scatter(sell["Date"], sell["ProfitLoss"], c = "r")
+
+    # Replot summary in its entirety to generate a line
+    ax.plot(df_summary["Date"], df_summary["ProfitLoss"])
+
+    # Use same range as the price plot by copying a given 
+    ax.set_xlim(*reference_ax.get_xlim())
 
 def main():
     data_file_path = "datasets/Coinbase_BTCUSD_1h.csv"
