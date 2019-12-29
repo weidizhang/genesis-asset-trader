@@ -34,10 +34,6 @@ def alternate_extremas(df, sell_at_loss = False):
 #
 # Assumes that alternate_extremas was already applied to df
 def end_with_sell(df):
-    for i, row in df.iloc[::-1].iterrows():
-        extrema_type = row["Extrema"]
-        if extrema_type != 0:
-            if extrema_type == -1:
-                Predict.delete_extremas(df, i)
-
-            break
+    last_extrema = df[df["Extrema"] != 0][::-1].iloc[0]
+    if last_extrema["Extrema"] == -1:
+        Predict.delete_extremas(df, last_extrema.name)
