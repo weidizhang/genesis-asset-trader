@@ -5,7 +5,6 @@ from predict import Predict
 
 import backtest_strategy as strategy
 import data_processor
-import train
 
 def configure():
     register_matplotlib_converters()
@@ -26,9 +25,9 @@ def predict_extremas(data_file_path,
         max_conflicts = 2,
         search_distance = 26
     )
-    train.preprocess_data(df)
+    Predict.preprocess_data(df)
 
-    removed_extremas = predict.predict_full(df, train.split_data(df)[0])
+    removed_extremas = predict.predict_full(df, Predict.feature_attributes(df))
     print("Extremas removed from originally predicted model via heuristic:", removed_extremas)
 
     removed_extremas = strategy.alternate_extremas(df)

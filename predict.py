@@ -1,5 +1,7 @@
 from joblib import load
 
+import train
+
 class Predict:
     def __init__(self, model_file, k_neighbors = -1, max_conflicts = -1, search_distance = -1):
         if k_neighbors < 0 or max_conflicts < 0 or search_distance < 0:
@@ -13,6 +15,10 @@ class Predict:
     @staticmethod
     def delete_extremas(df, indices):
         df.loc[indices, "Extrema"] = 0
+
+    @staticmethod
+    def feature_attributes(*args, **kwargs):
+        return train.split_data(*args, **kwargs)[0]
 
     def load_model(self, file):
         self._model = load(file)
@@ -40,6 +46,10 @@ class Predict:
         Predict.delete_extremas(df, bad_extremas)
 
         return len(bad_extremas)
+
+    @staticmethod
+    def preprocess_data(*args, **kwargs):
+        return train.preprocess_data(*args, **kwargs)
 
     def set_k_neighbors(self, k):
         self._k = k
