@@ -1,15 +1,8 @@
-from pandas.plotting import register_matplotlib_converters
-import matplotlib.pyplot as plt
-
 from predict import Predict
+from visualizer import Visualizer
 
 import backtest_strategy as strategy
 import data_processor
-
-def configure():
-    register_matplotlib_converters()
-    plt.rcParams["figure.figsize"] = (10, 6)
-    plt.rcParams["axes.titlepad"] = 3
 
 def predict_extremas(data_file_path,
         data_year_range = None, data_hourly = False,
@@ -38,57 +31,58 @@ def predict_extremas(data_file_path,
     return df
 
 def visualize_data(df):
-    fig, axs = plt.subplots(2, gridspec_kw = { "height_ratios": [3, 1] })
-    ax0, ax1 = axs
-    x = df["Date"]
+    viz = Visualizer("Overall Predictive Backtest", 2, [3, 1])
 
-    fig.suptitle("Overall Predictive Backtest")
+    [plot(df, viz) for plot in (plot_price, plot_transaction_summary)]
+    viz.show_last_x_axis_only()
+    viz.show()
 
-    # Price
-    ax0.title.set_text("Price")
-
-    ax0.plot(x, df["HLCAverage"])
-
-    # Price: Extrema
+def plot_price(df, viz):
     minima = df.loc[df["Extrema"] == -1]
     maxima = df.loc[df["Extrema"] == 1]
 
-    ax0.scatter(minima["Date"], minima["HLCAverage"], c = "g")
-    ax0.scatter(maxima["Date"], maxima["HLCAverage"], c = "r")
+    def price_callback(ax):
+        # HLCAverage as price
+        ax.plot(df["Date"], df["HLCAverage"])
 
-    ax0.legend(["HLC Average", "Model Buy", "Model Sell"])
+        # Price Extrema
+        ax.scatter(minima["Date"], minima["HLCAverage"], c = "g")
+        ax.scatter(maxima["Date"], maxima["HLCAverage"], c = "r")
 
-    visualize_tx_summary(df, ax1, ax0)
+    viz.fill_next_axis(price_callback, "Price", ["HLC Average", "Model Buy", "Model Sell"])
 
-    plt.show()
-
-def visualize_tx_summary(df, ax, reference_ax):
+def plot_transaction_summary(df, viz):
     df_summary = strategy.generate_tx_summary(df)
     print(df_summary)
 
     buy = df_summary.loc[df_summary["Extrema"] == -1]
     sell = df_summary.loc[df_summary["Extrema"] == 1]
 
-    pl_text = str(round(df_summary[::-1].iloc[0]["ProfitLoss"], 2)) + "%"
-    ax.title.set_text("Profit/Loss: " + pl_text + " Over Time Span")
+    pl_title = "Profit/Loss: " + str(round(df_summary[::-1].iloc[0]["ProfitLoss"], 2)) + "% Over Time Span"
 
-    ax.scatter(buy["Date"], buy["ProfitLoss"], c = "g")
-    ax.scatter(sell["Date"], sell["ProfitLoss"], c = "r")
+    def tx_callback(ax):
+        # Plot each buy and sell transaction
+        ax.scatter(buy["Date"], buy["ProfitLoss"], c = "g")
+        ax.scatter(sell["Date"], sell["ProfitLoss"], c = "r")
 
-    # Replot summary in its entirety to generate a line
-    ax.plot(df_summary["Date"], df_summary["ProfitLoss"])
+        # Replot summary in its entirety to generate a line
+        ax.plot(df_summary["Date"], df_summary["ProfitLoss"])
 
-    # Use same range as the price plot by copying a given 
-    ax.set_xlim(*reference_ax.get_xlim())
+        # Use same range as the price plot by copying the limits of the
+        # x axis of the price plot (first plot/axis of the figure)
+        ax.set_xlim(*viz.get_axes()[0].get_xlim())
+
+    viz.fill_next_axis(tx_callback, pl_title)
 
 def main():
+    # Generate predictions / do backtests on the 2019 data, as our model
+    # is trained with data from 2017-2018
     data_file_path = "datasets/Coinbase_BTCUSD_1h.csv"
     data_year_range = (2019,)
 
     df_backtest = predict_extremas(data_file_path, data_year_range, True)
     print(df_backtest)
 
-    configure()
     visualize_data(df_backtest)
 
 if __name__ == "__main__":

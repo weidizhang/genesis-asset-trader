@@ -1,64 +1,55 @@
 from pandas.plotting import register_matplotlib_converters
 import matplotlib.pyplot as plt
 
-import data_processor
+class Visualizer:
+    def __init__(self, title, num_subplot_rows, height_ratios):
+        self._configure()
+        self._generate_figure(title, num_subplot_rows, height_ratios)
+        self._current_axis = 0
 
-def configure():
-    register_matplotlib_converters()
-    plt.rcParams["figure.figsize"] = (10, 6)
-    plt.rcParams["axes.titlepad"] = 3
+    def fill_next_axis(self, callback, title = None, legend = None):
+        if self._current_axis > len(self._axes):
+            raise VisualizerException("Exceeded number of axes in figure")
 
-def visualize_data():
-    df = data_processor.main()
-    fig, axs = plt.subplots(4, gridspec_kw = { "height_ratios": [3, 1, 1, 1] })
-    ax0, ax1, ax2, ax3 = axs
-    x = df["Date"]
+        next_axis = self._axes[self._current_axis]
+        if title is not None:
+            next_axis.title.set_text(title)
 
-    fig.suptitle("Indicator Movement on Condensed Range Data")
+        # Any data drawn, e.g. via scatter or plot functions, should be done
+        # by the callback function
+        callback(next_axis)
 
-    # Price, EMA30
-    ax0.title.set_text("Price")
+        if legend is not None:
+            next_axis.legend(legend)
 
-    ax0.plot(x, df["HLCAverage"])
-    ax0.plot(x, df["EMA30"])
+        self._current_axis += 1
 
-    # Price: Extrema
-    minima = df.loc[df["Extrema"] == -1]
-    maxima = df.loc[df["Extrema"] == 1]
+    def get_fig(self):
+        return self._fig
 
-    ax0.scatter(minima["Date"], minima["HLCAverage"], c = "g")
-    ax0.scatter(maxima["Date"], maxima["HLCAverage"], c = "r")
+    def get_axes(self):
+        return self._axes
 
-    ax0.legend(["HLC Average", "EMA30", "Minima", "Maxima"])
+    # Should be called on completion of filling all axes
+    def show(self):
+        plt.show()
 
-    # MACD
-    ax1.title.set_text("Moving Average Convergence Divergence")
+    def show_last_x_axis_only(self):
+        # Typically, we will have multiple graphs stacked on top of each other
+        # in rows with the same x axis on all graphs
+        #
+        # For better visuals, we would only want to show the bottom most x axis
+        for i in range(len(self._axes) - 1):
+            self._axes[i].get_xaxis().set_visible(False)
 
-    ax1.plot(x, df["MACD"])
-    ax1.plot(x, df["MACDSignal"])
-    ax1.legend(["MACD", "Signal"])
+    def _configure(self):
+        register_matplotlib_converters()
+        plt.rcParams["figure.figsize"] = (10, 6)
+        plt.rcParams["axes.titlepad"] = 3
 
-    # OBV
-    ax2.title.set_text("On-Balance Volume")
+    def _generate_figure(self, title, num_subplot_rows, height_ratios):
+        self._fig, self._axes = plt.subplots(num_subplot_rows, gridspec_kw = { "height_ratios": height_ratios })
+        self._fig.suptitle(title)
 
-    ax2.plot(x, df["OBV"])
-    ax2.legend(["OBV"])
-
-    # RSI
-    ax3.title.set_text("Relative Strength Indicator")
-
-    ax3.plot(x, df["RSI"])
-    ax3.legend(["RSI"])
-
-    # Hide dates besides last subplot
-    for i in range(len(axs) - 1):
-        axs[i].get_xaxis().set_visible(False)
-
-    plt.show()
-
-def main():
-    configure()
-    visualize_data()
-
-if __name__ == "__main__":
-    main()
+class VisualizerException(Exception):
+    pass
