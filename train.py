@@ -50,9 +50,9 @@ def main():
     features, target = split_data(df)
 
     dtree = make_decision_tree(features, target)
+    save_decision_tree(dtree)
     visualize_decision_tree(dtree, features)
 
-    save_decision_tree(dtree)
     return dtree
 
 
