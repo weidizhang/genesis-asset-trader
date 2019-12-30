@@ -6,7 +6,7 @@ import indicators
 
 def read_data(data_file_path,
         data_year_range = None, data_condensed = False, data_hourly = False,
-        extrema_n = 20):
+        extrema_n = 20, extrema_enabled = True):
     # Data frame
     df = pd.read_csv(
         data_file_path,
@@ -55,12 +55,14 @@ def read_data(data_file_path,
     indicators.generate_macd_cross(df)
 
     # Generate local price extremas
-    minima_indices = extrema.local_minima(df["HLCAverage"], extrema_n)
-    maxima_indices = extrema.local_maxima(df["HLCAverage"], extrema_n)
-
     df["Extrema"] = np.nan
-    df.loc[minima_indices, "Extrema"] = -1
-    df.loc[maxima_indices, "Extrema"] = 1
+
+    if extrema_enabled:
+        minima_indices = extrema.local_minima(df["HLCAverage"], extrema_n)
+        maxima_indices = extrema.local_maxima(df["HLCAverage"], extrema_n)
+
+        df.loc[minima_indices, "Extrema"] = -1
+        df.loc[maxima_indices, "Extrema"] = 1
 
     return df
 

@@ -16,7 +16,7 @@ def predict_extremas(data_file_path,
         extrema_n = 20):
 
     # Use the data processor to get the data frame for actual data
-    df = data_processor.read_data(data_file_path, data_year_range, True, data_hourly, extrema_n)
+    df = data_processor.read_data(data_file_path, data_year_range, True, data_hourly, extrema_n, False)
 
     # Use optional keyword for readability
     predict = Predict(

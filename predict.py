@@ -88,10 +88,6 @@ class Predict:
         return len(region[region["Extrema"] == extrema_type]) >= self._k
 
     def _merge_data(self, df, predicted_extremas):
-        # Delete real extrema data and replace with predicted data
-        # TODO: make sure extrema data is empty by setting a flag in data processor
-        df["Extrema"] = 0
-
         # TODO: is there a better way to do this?
         for i, row in predicted_extremas.iterrows():
             df.loc[i, "Extrema"] = row["Extrema"]
