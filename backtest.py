@@ -20,6 +20,25 @@ def predict_extremas(data_file_path,
     )
     Predict.preprocess_data(df)
 
+    # This block of code is only for testing the predict_point function in Predict.
+    # Uncomment this block of code and remove the call to predict_full following this
+    # test block.
+    #
+    # Observe that its results is the same as using the full prediction.
+    # It will run significantly slower than predict_full as it is meant to be used to
+    # predict single points in a dataframe only for a faster speed.
+    #
+    # Begin code block
+    #
+    # df_features = Predict.feature_attributes(df)
+    # results = {}
+    # for i in range(len(df)):
+    #     results[i] = predict.predict_point(df, df_features, i)
+    # for i, e in results.items():
+    #     df.loc[i, "Extrema"] = e
+    #
+    # End code block
+
     removed_extremas = predict.predict_full(df, Predict.feature_attributes(df))
     print("Extremas removed from originally predicted model via heuristic:", removed_extremas)
 

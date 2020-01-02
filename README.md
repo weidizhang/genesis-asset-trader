@@ -112,4 +112,3 @@ See: https://scikit-learn.org/stable/modules/model_persistence.html
 
 ### TODO
 - Integration with an asset trading site that will trade live using the ```predict.py``` module
-- Improve ```predict.py``` module to add a way to predict extrema on just the select most recent point in time

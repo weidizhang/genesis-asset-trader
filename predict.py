@@ -23,14 +23,6 @@ class Predict:
     def load_model(self, file):
         self._model = load(file)
 
-    def predict_with_model(self, df_features):
-        predict = self._model.predict(df_features)
-
-        # Copy it to get rid of pandas error of setting on copy of a slice
-        df_features = df_features.copy()
-        df_features["Extrema"] = predict
-        return df_features
-
     # Returns number of removed extremas from the originally predicted data based on
     # the decision tree model
     #
@@ -46,6 +38,43 @@ class Predict:
         Predict.delete_extremas(df, bad_extremas)
 
         return len(bad_extremas)
+
+    # Returns the predicted extrema at the lastest point in time in the dataframe df
+    #
+    # Wrapper function that calls predict_point
+    #
+    # Meant for use with real time live trading data in some form of automated
+    # trading to predict the latest point in time
+    def predict_latest(self, df, df_features, model_predict_only = False):
+        return self.predict_point(df, df_features, len(df) - 1, model_predict_only)
+
+    # Returns the predicted extrema at any given point based on its index in df
+    #
+    # Generates a copy of the dataframe df with only the required search distance
+    # sliced from the original dataframe to perform the prediction on; saves
+    # extra calculation time over computing predictions on the entire dataframe
+    #
+    # Original data dataframe df is not modified with extrema data
+    def predict_point(self, df, df_features, index, model_predict_only = False):
+        # We do not add 1 to the calculated start_i, e.g. index - dist + 1, as we want
+        # a slice of size dist + 1 rather than dist: this gives a search region of size
+        # dist followed by the point we want to determine
+        start_i = index - self._distance
+        region = slice(start_i if start_i >= 0 else 0, index + 1)
+
+        df_point = df.iloc[region].copy()
+        df_point_features = df_features.iloc[region].copy()
+
+        self.predict_full(df_point, df_point_features, model_predict_only)
+        return df_point.iloc[-1]["Extrema"]
+
+    def predict_with_model(self, df_features):
+        predict = self._model.predict(df_features)
+
+        # Copy it to get rid of pandas error of setting on copy of a slice
+        df_features = df_features.copy()
+        df_features["Extrema"] = predict
+        return df_features
 
     @staticmethod
     def preprocess_data(*args, **kwargs):
@@ -69,12 +98,18 @@ class Predict:
     def validate_extremas(self, df):
         bad_indices = []
 
+        # Offset is used to make predict_point work where the sliced dataframes do not
+        # start with an index of 0
+        #
+        # This will be 0 when using predict_full on properly indexed data
+        start_offset = df.first_valid_index()
+
         for i, row in df.iterrows():
             extrema_type = row["Extrema"]
             if extrema_type == 0:
                 continue
 
-            search_region = df.iloc[i - self._distance:i]
+            search_region = df.iloc[i - start_offset - self._distance:i - start_offset]
             if self._has_conflicts(search_region, extrema_type) or not self._has_k_neighbors(search_region, extrema_type):
                 bad_indices.append(i)
 
