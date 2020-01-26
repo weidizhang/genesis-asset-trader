@@ -4,6 +4,10 @@ import pandas as pd
 import extrema
 import indicators
 
+# Read data from CSV before processing
+#
+# This is the one that is generally called for training and backtest prediction
+# purposes
 def read_data(data_file_path,
         data_year_range = None, data_condensed = False, data_hourly = False,
         extrema_n = 20, extrema_enabled = True):
@@ -23,7 +27,20 @@ def read_data(data_file_path,
 
     # Reverse the data set as it is loaded in date descending order, we want ascending
     df = df.iloc[::-1]
+
+    return read_data_from_df(df, data_condensed, data_hourly, extrema_n, extrema_enabled)
+
+# Process data straight a from pandas dataframe
+#
+# Should be directly called when using data that has been pre-processed into a 
+# compatible dataframe that the indicator data should be generated on
+def read_data_from_df(df, data_condensed = False, data_hourly = False,
+        extrema_n = 20, extrema_enabled = True):
     # Reset index as correct index is depended on by generate_obv
+    #
+    # This is done in the case that the indicies are not in the correct order, either by the
+    # df passed in because of custom pre-processing, or because of df being reversed in
+    # read_data
     df.reset_index(drop = True, inplace = True)
     
     indicators.generate_hlc(df)
